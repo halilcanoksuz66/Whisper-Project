@@ -11,19 +11,28 @@ CONFIG += c++17
 SOURCES += \
     audiocapture.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    whisper_transcribe.cpp \
+    whispertranscribeworker.cpp
 
 HEADERS += \
     audiocapture.h \
-    mainwindow.h
+    mainwindow.h \
+    whisper_transcribe.h \
+    whispertranscribeworker.h
 
 FORMS += \
     mainwindow.ui
 
-# PortAudio
-INCLUDEPATH += C:/msys64/home/halil/portaudio/include
+INCLUDEPATH += \
+    C:/msys64/home/halil/portaudio/include \
+    C:/Users/halil/Documents/GitHub/Whisper-Project/include \
+    C:/Users/halil/Documents/GitHub/Whisper-Project/ggml/include
+
 DEPENDPATH += C:/msys64/home/halil/portaudio/include
 LIBS += -L"C:/msys64/home/halil/portaudio/build" -lportaudio
+LIBS += -L"C:/Users/halil/Documents/GitHub/Whisper-Project/lib"
+
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
