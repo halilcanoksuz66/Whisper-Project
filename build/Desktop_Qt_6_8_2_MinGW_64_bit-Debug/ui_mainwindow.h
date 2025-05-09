@@ -11,7 +11,7 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
@@ -26,8 +26,8 @@ class Ui_MainWindow
 public:
     QWidget *centralwidget;
     QTextEdit *messageDisplay;
-    QPushButton *sendButton;
-    QLineEdit *messageInput;
+    QWidget *widget;
+    QHBoxLayout *horizontalLayout;
     QPushButton *startButton;
     QPushButton *stopButton;
     QPushButton *saveButton;
@@ -43,23 +43,37 @@ public:
         centralwidget->setObjectName("centralwidget");
         messageDisplay = new QTextEdit(centralwidget);
         messageDisplay->setObjectName("messageDisplay");
-        messageDisplay->setGeometry(QRect(130, 30, 511, 141));
+        messageDisplay->setGeometry(QRect(50, 20, 691, 251));
         messageDisplay->setReadOnly(true);
-        sendButton = new QPushButton(centralwidget);
-        sendButton->setObjectName("sendButton");
-        sendButton->setGeometry(QRect(280, 280, 161, 41));
-        messageInput = new QLineEdit(centralwidget);
-        messageInput->setObjectName("messageInput");
-        messageInput->setGeometry(QRect(260, 200, 201, 51));
-        startButton = new QPushButton(centralwidget);
+        widget = new QWidget(centralwidget);
+        widget->setObjectName("widget");
+        widget->setGeometry(QRect(70, 320, 651, 161));
+        horizontalLayout = new QHBoxLayout(widget);
+        horizontalLayout->setObjectName("horizontalLayout");
+        horizontalLayout->setContentsMargins(0, 0, 0, 0);
+        startButton = new QPushButton(widget);
         startButton->setObjectName("startButton");
-        startButton->setGeometry(QRect(200, 400, 131, 51));
-        stopButton = new QPushButton(centralwidget);
+        QSizePolicy sizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Fixed);
+        sizePolicy.setHorizontalStretch(0);
+        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHeightForWidth(startButton->sizePolicy().hasHeightForWidth());
+        startButton->setSizePolicy(sizePolicy);
+        startButton->setMinimumSize(QSize(0, 50));
+
+        horizontalLayout->addWidget(startButton);
+
+        stopButton = new QPushButton(widget);
         stopButton->setObjectName("stopButton");
-        stopButton->setGeometry(QRect(340, 400, 131, 51));
-        saveButton = new QPushButton(centralwidget);
+        stopButton->setMinimumSize(QSize(0, 50));
+
+        horizontalLayout->addWidget(stopButton);
+
+        saveButton = new QPushButton(widget);
         saveButton->setObjectName("saveButton");
-        saveButton->setGeometry(QRect(480, 400, 131, 51));
+        saveButton->setMinimumSize(QSize(0, 50));
+
+        horizontalLayout->addWidget(saveButton);
+
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
@@ -77,7 +91,6 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "MainWindow", nullptr));
-        sendButton->setText(QCoreApplication::translate("MainWindow", "G\303\266nder", nullptr));
         startButton->setText(QCoreApplication::translate("MainWindow", "Start", nullptr));
         stopButton->setText(QCoreApplication::translate("MainWindow", "Stop", nullptr));
         saveButton->setText(QCoreApplication::translate("MainWindow", "Save", nullptr));

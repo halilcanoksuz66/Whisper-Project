@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QThread>
 #include "whispertranscribeworker.h"
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -14,9 +15,9 @@ MainWindow::MainWindow(QWidget* parent)
     ui->setupUi(this);
 
     // Start ve Stop butonlarına bağlantı ekle
-    connect(ui->startButton, &QPushButton::clicked, audioCapture, &AudioCapture::startCapture);
-    connect(ui->stopButton, &QPushButton::clicked, audioCapture, &AudioCapture::stopCapture);
-    
+    connect(ui->startButton, &QPushButton::clicked, this, &MainWindow::onStartButtonClicked);
+    connect(ui->stopButton, &QPushButton::clicked, this, &MainWindow::onStopButtonClicked);
+
     // Save butonuna bağlantı ekle
     connect(ui->saveButton, &QPushButton::clicked, this, &MainWindow::onSaveButtonClicked);
     
@@ -67,4 +68,26 @@ void MainWindow::onSaveButtonClicked() {
         ui->messageDisplay->setText("Ses kaydedilemedi!");
 
     }
+}
+
+void MainWindow::onStartButtonClicked()
+{
+    // Ses kaydını başlat
+    audioCapture->startCapture();
+
+    // Kullanıcıya mesaj göster
+    QMessageBox::information(this, "Bilgi", "Ses kaydı başladı.");
+
+    // Start butonunu devre dışı bırak
+    ui->startButton->setEnabled(false);
+
+    // Stop butonunu aktif et (opsiyonel)
+    ui->stopButton->setEnabled(true);
+}
+
+void MainWindow::onStopButtonClicked()
+{
+    audioCapture->stopCapture();
+    ui->startButton->setEnabled(true);  // start butonunu yeniden aktif et
+    ui->stopButton->setEnabled(false);  // stop butonunu devre dışı bırak
 }
