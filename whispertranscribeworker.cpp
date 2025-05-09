@@ -3,7 +3,7 @@
 #include "whisper_transcribe.h"
 #include <QDebug>
 
-WhisperTranscribeWorker::WhisperTranscribeWorker() {
+WhisperTranscribeWorker::WhisperTranscribeWorker(MainWindow* mainWindowRef) : mainWindow(mainWindowRef) {
     // Constructor implementation
 }
 
@@ -18,7 +18,7 @@ void WhisperTranscribeWorker::doTranscription(const QString& filePath) {
 }
 
 void WhisperTranscribeWorker::transcribeFile(const QString& filePath) {
-    WhisperTranscribe t;
+    WhisperTranscribe t(mainWindow);
     std::vector<float> samples;
 
     if (!t.read_wav_file(filePath.toStdString().c_str(), samples)) {

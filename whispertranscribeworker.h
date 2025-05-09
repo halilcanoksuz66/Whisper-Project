@@ -3,12 +3,13 @@
 #define WHISPER_TRANSCRIBE_WORKER_H
 
 #include <QObject>
+#include "mainwindow.h"
 
 class WhisperTranscribeWorker : public QObject {
     Q_OBJECT
 
 public:
-    WhisperTranscribeWorker();
+    WhisperTranscribeWorker(MainWindow* mainWindowRef);
     ~WhisperTranscribeWorker();
 
 public slots:
@@ -18,6 +19,9 @@ public slots:
 signals:
     void finished();         // İşlem bittiğinde
     void error(QString err); // Hata olursa
+
+private:
+    MainWindow* mainWindow;
 };
 
 #endif // WHISPER_TRANSCRIBE_WORKER_H

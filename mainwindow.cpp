@@ -53,7 +53,7 @@ void MainWindow::onSaveButtonClicked() {
         QString filePath = dir.absoluteFilePath(filename);  // Dosya yolunu tam olarak al
 
         QThread* thread = new QThread;
-        WhisperTranscribeWorker* worker = new WhisperTranscribeWorker();
+        WhisperTranscribeWorker* worker = new WhisperTranscribeWorker(this);
 
         worker->moveToThread(thread);
         // Thread başladığında transkripsiyon fonksiyonunu çalıştır
@@ -90,4 +90,8 @@ void MainWindow::onStopButtonClicked()
     audioCapture->stopCapture();
     ui->startButton->setEnabled(true);  // start butonunu yeniden aktif et
     ui->stopButton->setEnabled(false);  // stop butonunu devre dışı bırak
+}
+
+void MainWindow::appendMessageToDisplay(const QString& message) {
+    ui->messageDisplay->append(message);
 }

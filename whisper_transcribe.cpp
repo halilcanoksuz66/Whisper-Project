@@ -20,8 +20,9 @@ struct WAVHeader {
     uint16_t bits_per_sample;
 };
 
-WhisperTranscribe::WhisperTranscribe(QObject *parent)
-    : QObject(parent)
+WhisperTranscribe::WhisperTranscribe(MainWindow* mainWindowRef, QObject *parent)
+    : QObject(parent),
+    mainWindow(mainWindowRef)
 {
     // Buraya gerekiyorsa başlatma kodları yazılır
 }
@@ -183,6 +184,7 @@ void WhisperTranscribe::transcribe_audio(const std::vector<float> audio) {
         for (int i = 0; i < n_segments; ++i) {
             const char* text = whisper_full_get_segment_text(ctx, i);
             std::cout << text << std::endl;
+            mainWindow->appendMessageToDisplay(QString::fromUtf8(text));
             outfile << text << std::endl; // Dosyaya da yaz
         }
         outfile.close();

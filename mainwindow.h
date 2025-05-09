@@ -17,6 +17,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void appendMessageToDisplay(const QString& message);
 
 private slots:
     void onSaveButtonClicked();
