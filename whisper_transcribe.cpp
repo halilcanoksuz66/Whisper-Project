@@ -20,16 +20,55 @@ struct WAVHeader {
     uint16_t bits_per_sample;
 };
 
+HMODULE WhisperTranscribe::hModule = nullptr;
+struct whisper_context* WhisperTranscribe::ctx = nullptr;
+
+WhisperInitFromFileFunc WhisperTranscribe::whisper_init_from_file = nullptr;
+WhisperFreeFunc WhisperTranscribe::whisper_free = nullptr;
+WhisperFullFunc WhisperTranscribe::whisper_full = nullptr;
+WhisperFullNSegmentsFunc WhisperTranscribe::whisper_full_n_segments = nullptr;
+WhisperFullGetSegmentTextFunc WhisperTranscribe::whisper_full_get_segment_text = nullptr;
+WhisperFullDefaultParamsFunc WhisperTranscribe::whisper_full_default_params = nullptr;
+
 WhisperTranscribe::WhisperTranscribe(MainWindow* mainWindowRef, QObject *parent)
     : QObject(parent),
     mainWindow(mainWindowRef)
 {
-    // Buraya gerekiyorsa başlatma kodları yazılır
+    if (!load_model()) {
+        std::cerr << "Model yüklenemedi!" << std::endl;
+    }
 }
 
 WhisperTranscribe::~WhisperTranscribe() {
-    // Temizlik işlemleri
+    // Belleği serbest bırak
+    if (ctx) {
+        whisper_free(ctx);
+    }
+
+    if (hModule) {
+        FreeLibrary(hModule);
+    }
 }
+
+bool WhisperTranscribe::load_model() {
+    hModule = LoadLibrary(L"C:\\Users\\halil\\Documents\\GitHub\\Whisper-Project\\lib\\whisper.dll");
+    if (!hModule) {
+        std::cerr << "DLL yüklenemedi!" << std::endl;
+        return false;
+    }
+
+    whisper_init_from_file = (WhisperInitFromFileFunc)GetProcAddress(hModule, "whisper_init_from_file");
+    whisper_free = (WhisperFreeFunc)GetProcAddress(hModule, "whisper_free");
+
+    ctx = whisper_init_from_file("C:\\Users\\halil\\Documents\\GitHub\\Whisper-Project\\models\\ggml-small-q8_0.bin");
+    if (!ctx) {
+        std::cerr << "Model yüklenemedi!" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 // WAV dosyasını oku ve gerekirse dönüştür
 bool WhisperTranscribe::read_wav_file(const char* filename, std::vector<float>& samples) {
     std::ifstream file(filename, std::ios::binary);
@@ -107,91 +146,67 @@ bool WhisperTranscribe::read_wav_file(const char* filename, std::vector<float>& 
 
 // Ana fonksiyon
 void WhisperTranscribe::transcribe_audio(const std::vector<float> audio) {
-    // DLL dosyasını yükle
-    HMODULE hModule = LoadLibrary(L"C:\\Users\\halil\\Documents\\GitHub\\Whisper-Project\\lib\\whisper.dll");
-    if (hModule == NULL) {
-        DWORD dwError = GetLastError();
-        std::cerr << "DLL yüklenemedi! Hata kodu: " << dwError << std::endl;
-        return;
-    }
-    else {
-        std::cout << "DLL başarıyla yüklendi!" << std::endl;
-    }
-
-    // Fonksiyonları tanımla
-    typedef struct whisper_context* (*WhisperInitFromFileFunc)(const char* path_model);
-    typedef void (*WhisperFreeFunc)(struct whisper_context* ctx);
-    typedef int (*WhisperFullFunc)(struct whisper_context* ctx, struct whisper_full_params params, const float* samples, int n_samples);
-    typedef int (*WhisperFullNSegmentsFunc)(struct whisper_context* ctx);
-    typedef const char* (*WhisperFullGetSegmentTextFunc)(struct whisper_context* ctx, int i_segment);
-    typedef struct whisper_full_params (*WhisperFullDefaultParamsFunc)(enum whisper_sampling_strategy strategy);
-
-    // Fonksiyonları yükle
-    WhisperInitFromFileFunc whisper_init_from_file = (WhisperInitFromFileFunc)GetProcAddress(hModule, "whisper_init_from_file");
-    WhisperFreeFunc whisper_free = (WhisperFreeFunc)GetProcAddress(hModule, "whisper_free");
-    WhisperFullFunc whisper_full = (WhisperFullFunc)GetProcAddress(hModule, "whisper_full");
-    WhisperFullNSegmentsFunc whisper_full_n_segments = (WhisperFullNSegmentsFunc)GetProcAddress(hModule, "whisper_full_n_segments");
-    WhisperFullGetSegmentTextFunc whisper_full_get_segment_text = (WhisperFullGetSegmentTextFunc)GetProcAddress(hModule, "whisper_full_get_segment_text");
-    WhisperFullDefaultParamsFunc whisper_full_default_params = (WhisperFullDefaultParamsFunc)GetProcAddress(hModule, "whisper_full_default_params");
-
-    if (!whisper_init_from_file || !whisper_free || !whisper_full || !whisper_full_n_segments ||
-        !whisper_full_get_segment_text || !whisper_full_default_params) {
-        DWORD dwError = GetLastError();
-        std::cerr << "Fonksiyonlar DLL içinde bulunamadı! Hata kodu: " << dwError << std::endl;
-        FreeLibrary(hModule);
+    // Audio verisi boşsa, işlem yapma
+    if (audio.empty()) {
+        std::cerr << "Audio verisi boş!" << std::endl;
         return;
     }
 
-    // Whisper context'i oluştur
-    struct whisper_context* ctx = whisper_init_from_file("C:\\Users\\halil\\Documents\\GitHub\\Whisper-Project\\models\\ggml-large-v3.bin");
     if (!ctx) {
-        std::cerr << "Whisper context oluşturulamadı!" << std::endl;
-        FreeLibrary(hModule);
+        std::cerr << "Model yüklenmemiş!" << std::endl;
         return;
     }
 
+    // DLL ve context sadece ilk seferde yüklensin
+    if (hModule) {
 
+        whisper_init_from_file = reinterpret_cast<WhisperInitFromFileFunc>(GetProcAddress(hModule, "whisper_init_from_file"));
+        whisper_free = reinterpret_cast<WhisperFreeFunc>(GetProcAddress(hModule, "whisper_free"));
+        whisper_full = reinterpret_cast<WhisperFullFunc>(GetProcAddress(hModule, "whisper_full"));
+        whisper_full_n_segments = reinterpret_cast<WhisperFullNSegmentsFunc>(GetProcAddress(hModule, "whisper_full_n_segments"));
+        whisper_full_get_segment_text = reinterpret_cast<WhisperFullGetSegmentTextFunc>(GetProcAddress(hModule, "whisper_full_get_segment_text"));
+        whisper_full_default_params = reinterpret_cast<WhisperFullDefaultParamsFunc>(GetProcAddress(hModule, "whisper_full_default_params"));
 
-    // Transcribe parametrelerini ayarla
-    struct whisper_full_params params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
-    params.print_progress = true;
-    params.print_realtime = true;
+        if (!whisper_init_from_file || !whisper_free || !whisper_full || !whisper_full_n_segments ||
+            !whisper_full_get_segment_text || !whisper_full_default_params) {
+            std::cerr << "DLL fonksiyonları yüklenemedi! Hata kodu: " << GetLastError() << std::endl;
+            FreeLibrary(hModule);
+            hModule = nullptr;
+            return;
+        }
+    }
+
+    // Parametreleri hazırla
+    whisper_full_params params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
+    params.print_progress = false;
+    params.print_realtime = false;
     params.print_timestamps = true;
-    params.language = "tr"; // Türkçe
-    params.translate = false; // Çeviri yapma
+    params.language = "tr";
+    params.translate = false;
     params.no_speech_thold = 0.6f;
 
-    // Transcribe işlemini başlat
+    // Transcribe işlemi
     if (whisper_full(ctx, params, audio.data(), audio.size()) != 0) {
         std::cerr << "Transcribe işlemi başarısız oldu!" << std::endl;
-        whisper_free(ctx);
-        FreeLibrary(hModule);
         return;
     }
 
-    // Sonuçları yazdır
     const int n_segments = whisper_full_n_segments(ctx);
-
-    // TXT dosyasını aç
     std::ofstream outfile("C:\\Users\\halil\\Documents\\GitHub\\Whisper-Project\\output.txt");
     if (!outfile.is_open()) {
         std::cerr << "Çıktı dosyası açılamadı!" << std::endl;
-        whisper_free(ctx);  // Kaynakları serbest bırak
-        FreeLibrary(hModule);  // DLL'i serbest bırak
         return;
-    } else {
-        // Ekrana ve dosyaya yaz
-        for (int i = 0; i < n_segments; ++i) {
-            const char* text = whisper_full_get_segment_text(ctx, i);
-            std::cout << text << std::endl;
-            mainWindow->appendMessageToDisplay(QString::fromUtf8(text));
-            outfile << text << std::endl; // Dosyaya da yaz
-        }
-        outfile.close();
-        std::cout << "Transkript output.txt dosyasına yazıldı." << std::endl;
     }
 
-    // Temizlik
-    whisper_free(ctx);
-    FreeLibrary(hModule);
+    for (int i = 0; i < n_segments; ++i) {
+        const char* text = whisper_full_get_segment_text(ctx, i);
+        if (text) {
+            std::cout << text << std::endl;
+            mainWindow->appendMessageToDisplay(QString::fromUtf8(text));
+            outfile << text << std::endl;
+        }
+    }
+
+    outfile.close();
+    std::cout << "Transkript dosyaya yazıldı." << std::endl;
 }
