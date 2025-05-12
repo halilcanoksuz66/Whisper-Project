@@ -6,6 +6,9 @@
 #include <QString>
 #include "whisper.h"  // Eğer whisper.h başlığına sahipseniz, burada kullanabilirsiniz.
 #include "mainwindow.h"
+#include <QTimer>
+#include <QElapsedTimer>
+
 
 // Whisper fonksiyon pointer typedef'lerini buraya koy
 typedef struct whisper_context* (*WhisperInitFromFileFunc)(const char* path_model);
@@ -39,6 +42,9 @@ private:
     static WhisperFullNSegmentsFunc whisper_full_n_segments;
     static WhisperFullGetSegmentTextFunc whisper_full_get_segment_text;
     static WhisperFullDefaultParamsFunc whisper_full_default_params;
+
+    QElapsedTimer timer;  // Timer ile geçen zamanı ölçmek için
+    QTimer *timerObj; // QTimer örneği
 };
 
 #endif // WHISPER_TRANSCRIBE_H
