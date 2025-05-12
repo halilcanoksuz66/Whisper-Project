@@ -60,7 +60,7 @@ bool WhisperTranscribe::load_model() {
     whisper_init_from_file = (WhisperInitFromFileFunc)GetProcAddress(hModule, "whisper_init_from_file");
     whisper_free = (WhisperFreeFunc)GetProcAddress(hModule, "whisper_free");
 
-    ctx = whisper_init_from_file("C:\\Users\\halil\\Documents\\GitHub\\Whisper-Project\\models\\ggml-small-q8_0.bin");
+    ctx = whisper_init_from_file("C:\\Users\\halil\\Documents\\GitHub\\Whisper-Project\\models\\ggml-large-v3-turbo-q8_0_2.bin");
     if (!ctx) {
         std::cerr << "Model yüklenemedi!" << std::endl;
         return false;
