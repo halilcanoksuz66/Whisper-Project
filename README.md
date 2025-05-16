@@ -1,6 +1,15 @@
-# Whisper-Project 🎙️🧠
+# Whisper-Project — Real-Time Voice-to-Text Transcription with GPU Acceleration 🎙️🧠
 
-Bu proje, **PortAudio** ile kişinin sesini alır ve **Whisper** kütüphanesi ile sesi metne çevirir.
+Bu proje, **PortAudio** ile mikrofondan gelen sesi alır ve **Whisper.cpp** kütüphanesi ile bu sesi **anlık olarak yazıya döker**. Uygulama, Whisper modelini doğrudan çalıştırmak yerine, **Whisper.dll** dinamik kütüphanesi üzerinden kullanılarak modüler ve performanslı bir yapı kurulmuştur.
+
+## 🔧 Özellikler
+
+- 🎤 Gerçek zamanlı ses kaydı (PortAudio)
+- 🧠 Whisper modeli ile metne dönüştürme (DLL üzerinden)
+- ⚡ CUDA desteği ile 7-8 kat daha hızlı inference
+- 📂 Kayıt ve çıktı yönetimi otomatik klasörleme ile
+- 🪟 Qt GUI — kullanıcı dostu arayüz
+---
 
 ## 🔊 Ses Kayıt Konumu
 PortAudio ile alınan ses, aşağıdaki klasöre kaydedilir:
